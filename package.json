@@ -1,0 +1,45 @@
+{
+  "name": "CourseBack",
+  "version": "1.0.0",
+  "description": "Sidtelfers multi vender website backend developed by Shahrukh Saifi",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "seed:admin": "node src/scripts/createAdmin.js",
+    "fix:categories": "node src/scripts/fixCategories.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@imagekit/nodejs": "^7.11.0",
+    "axios": "^1.18.1",
+    "bcryptjs": "^3.0.3",
+    "cashfree-pg": "^6.0.4",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-validator": "^7.3.2",
+    "google-auth-library": "^10.7.0",
+    "helmet": "^8.1.0",
+    "imagekit": "^6.0.0",
+    "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.1",
+    "morgan": "^1.10.1",
+    "multer": "^2.3.0",
+    "razorpay": "^2.9.6",
+    "resend": "^6.12.2",
+    "slugify": "^1.6.9",
+    "stripe": "^22.0.0",
+    "winston": "^3.19.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
