@@ -7,7 +7,7 @@ dist/
 # Log 
 *.log 
 npm-debug.log*
-
+ 
 # OS
 .DS_Store
 Thumbs.db
