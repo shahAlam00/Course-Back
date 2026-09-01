@@ -25,6 +25,7 @@ const allowedOrigins = [
   "http://localhost:5174",
   "https://thedigicampus.com",
   "https://www.thedigicampus.com",
+  "https://admin.thedigicampus.com"
 ];
 const corsOptions = {
   origin: function (origin, callback) {
