@@ -177,7 +177,7 @@ export const createCourse = async (req, res) => {
 
     if (req.file) {
       const base64 = req.file.buffer.toString("base64");
-      const uploaded = await getImageKit().upload({
+      const uploaded = await getImageKit().files.upload({
         file: base64,
         fileName: `thumbnail_${Date.now()}_${req.file.originalname}`,
         folder: "/course-thumbnails",
@@ -237,7 +237,7 @@ export const updateCourse = async (req, res) => {
 
     if (req.file) {
       const base64 = req.file.buffer.toString("base64");
-      const uploaded = await getImageKit().upload({
+      const uploaded = await getImageKit().files.upload({
         file: base64,
         fileName: `thumbnail_${Date.now()}_${req.file.originalname}`,
         folder: "/course-thumbnails",

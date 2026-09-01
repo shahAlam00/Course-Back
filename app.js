@@ -6,10 +6,12 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import courseRoutes from "./modules/course/course.routes.js";
+import doubtRoutes from "./modules/doubt/doubt.routes.js";
+
 dotenv.config();
 connectDB().catch((err) => console.error("DB connection failed:", err.message));
 
-  
+   
 
  
 const app = express();
@@ -19,9 +21,9 @@ const app = express();
 ======================= */
 
 const allowedOrigins = [
-  "http://localhost:5173",
+  "http://localhost:5173", 
   "http://localhost:5174",
-  
+   
 ];
 
 const corsOptions = {
@@ -73,6 +75,7 @@ app.get("/", (req, res) => {
 ======================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/doubts", doubtRoutes);
 /* =======================
    404 ROUTE HANDLER
 ======================= */

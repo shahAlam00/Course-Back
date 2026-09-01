@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser, getProfile, updateProfile, markLessonComplete, getAllStudents, getStudentById } from "./auth.controller.js";
+import { registerUser, loginUser, getProfile, updateProfile, markLessonComplete, getAllStudents, getStudentById, makeAdmin } from "./auth.controller.js";
 import { protect } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -12,4 +12,5 @@ router.post("/lesson-complete", protect, markLessonComplete);
 router.get("/students", getAllStudents);
 router.get("/students/:id", getStudentById);
 
+router.put("/make-admin", makeAdmin);
 export default router;

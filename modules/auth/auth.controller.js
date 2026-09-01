@@ -63,49 +63,87 @@ export const loginUser = async (req, res) => {
 // GET Profile
 export const getProfile = async (req, res) => {
   try {
+    // Auth middleware se user check
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. Please login again.",
+      });
+    }
+
     const user = await User.findById(req.user._id)
       .select("-password")
       .populate({
         path: "purchasedCourses.course",
-        select: "title shortDescription thumbnail category instructor duration totalLessons modules",
+        select:
+          "title shortDescription thumbnail category instructor duration totalLessons modules",
       });
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-    const purchasedCourses = user.purchasedCourses
-      .filter((pc) => pc.course)
-      .map((pc) => ({
-        _id: pc.course._id,
-        title: pc.course.title,
-        shortDescription: pc.course.shortDescription,
-        thumbnail: pc.course.thumbnail,
-        category: pc.course.category,
-        instructor: pc.course.instructor,
-        duration: pc.course.duration,
-        totalLessons: pc.course.totalLessons || pc.course.modules?.reduce((s, m) => s + m.lessons.length, 0) || 0,
-        completedLessons: pc.completedLessons?.length || 0,
-        progress: pc.progress || 0,
-        purchasedAt: pc.purchasedAt,
-      }));
+    const purchasedCourses = (user.purchasedCourses || [])
+      .filter((pc) => pc && pc.course)
+      .map((pc) => {
+        const course = pc.course;
 
-    res.status(200).json({
+        const totalLessons =
+          course.totalLessons ||
+          course.modules?.reduce(
+            (total, module) => total + (module.lessons?.length || 0),
+            0
+          ) ||
+          0;
+
+        return {
+          _id: course._id,
+          title: course.title,
+          shortDescription: course.shortDescription,
+          thumbnail: course.thumbnail,
+          category: course.category,
+          instructor: course.instructor,
+          duration: course.duration,
+          totalLessons,
+          completedLessons: pc.completedLessons?.length || 0,
+          progress: pc.progress || 0,
+          purchasedAt: pc.purchasedAt,
+        };
+      });
+
+    return res.status(200).json({
       success: true,
       data: {
         _id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
-        location: user.location,
-        avatar: user.avatar || user.name?.charAt(0).toUpperCase(),
-        joinedDate: new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+        phone: user.phone || "",
+        location: user.location || "",
+        avatar:
+          user.avatar ||
+          user.name?.charAt(0)?.toUpperCase() ||
+          "U",
+        joinedDate: user.createdAt
+          ? new Date(user.createdAt).toLocaleDateString("en-IN", {
+              month: "long",
+              year: "numeric",
+            })
+          : "",
         purchasedCourses,
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("GET PROFILE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
-
 // UPDATE Profile
 export const updateProfile = async (req, res) => {
   try {
@@ -122,7 +160,6 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // GET All Students (Admin)
 export const getAllStudents = async (req, res) => {
   try {
@@ -232,5 +269,49 @@ export const markLessonComplete = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const makeAdmin = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.role = "admin";
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "User role changed to admin successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Make admin error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

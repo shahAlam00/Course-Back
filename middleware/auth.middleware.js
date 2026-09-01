@@ -3,28 +3,64 @@ import User from "../modules/auth/auth.model.js";
 
 export const protect = async (req, res, next) => {
   try {
-    let authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      return res.status(401).json({ message: "No token" });
+      return res.status(401).json({
+        success: false,
+        message: "No token provided",
+      });
     }
 
-    
-    let token = authHeader.startsWith("Bearer")
+    const token = authHeader.startsWith("Bearer ")
       ? authHeader.split(" ")[1]
       : authHeader;
 
     if (!token) {
-      return res.status(401).json({ message: "No token" });
+      return res.status(401).json({
+        success: false,
+        message: "No token provided",
+      });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    req.user = user;
 
     next();
   } catch (error) {
     console.error("Auth error:", error.message);
-    res.status(401).json({ message: "Not authorized" });
+
+    return res.status(401).json({
+      success: false,
+      message: "Not authorized",
+    });
   }
+};
+
+export const adminOnly = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required",
+    });
+  }
+
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Admin access required",
+    });
+  }
+
+  next();
 };
