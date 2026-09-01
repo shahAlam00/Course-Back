@@ -21,11 +21,11 @@ const app = express();
 ======================= */
 
 const allowedOrigins = [
-  "http://localhost:5173", 
+  "http://localhost:5173",
   "http://localhost:5174",
-   
+  "https://thedigicampus.com",
+  "https://www.thedigicampus.com",
 ];
-
 const corsOptions = {
   origin: function (origin, callback) {
     // Agar development me ho ya localhost hai, toh bindass allow karo
