@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 // Register Controller
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -15,13 +15,20 @@ export const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({ name, email, password: hashedPassword });
+    const newUser = new User({ name, email, password: hashedPassword, phone: phone || "" });
     await newUser.save();
+
+    const token = jwt.sign(
+      { id: newUser._id, email: newUser.email },
+      process.env.JWT_SECRET || "your_jwt_secret_key",
+      { expiresIn: "7d" }
+    );
 
     res.status(201).json({
       success: true,
       message: "Registration successful!",
-      user: { id: newUser._id, name: newUser.name, email: newUser.email },
+      token,
+      user: { id: newUser._id, name: newUser.name, email: newUser.email, phone: newUser.phone },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

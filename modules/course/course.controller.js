@@ -1,9 +1,6 @@
 import Course from "./course.model.js";
 import User from "../auth/auth.model.js";
 import ImageKit from "@imagekit/nodejs";
-import Stripe from "stripe";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const getImageKit = () =>
   new ImageKit({
@@ -12,117 +9,44 @@ const getImageKit = () =>
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
   });
 
-// ===================== STRIPE =====================
+// ===================== DIRECT ENROLLMENT =====================
 
-export const createCheckoutSession = async (req, res) => {
+export const enrollCourse = async (req, res) => {
   try {
-    const { courseId, courseName, price } = req.body;
+    const { courseId } = req.body;
+    const userId = req.user._id.toString();
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: { name: courseName },
-            unit_amount: price * 100,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/courses`,
-      metadata: {
-        courseId: courseId || "",
-        userId: req.user._id.toString(),
-      },
-    });
+    if (!courseId) {
+      return res.status(400).json({ success: false, message: "Course ID is required" });
+    }
 
-    res.json({ id: session.id, url: session.url });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
-// Stripe Webhook - Payment verify karke course enroll karo
-export const stripeWebhook = async (req, res) => {
-  const sig = req.headers["stripe-signature"];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+    const alreadyEnrolled = user.purchasedCourses.some(
+      (pc) => pc.course.toString() === courseId
     );
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    const { courseId, userId } = session.metadata;
+    if (!alreadyEnrolled) {
+      user.purchasedCourses.push({
+        course: courseId,
+        stripeSessionId: "DIRECT_ENROLL",
+        progress: 0,
+        completedLessons: [],
+      });
+      await user.save();
 
-    if (courseId && userId) {
-      await enrollUserInCourse(userId, courseId, session.id);
-    }
-  }
-
-  res.json({ received: true });
-};
-
-// Verify session aur enroll karo (success page ke liye)
-export const verifyAndEnroll = async (req, res) => {
-  try {
-    const { sessionId } = req.body;
-
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    if (session.payment_status !== "paid") {
-      return res.status(400).json({ message: "Payment not completed" });
+      // Enrolled count badhao
+      await Course.findByIdAndUpdate(courseId, { $inc: { enrolledCount: 1 } });
     }
 
-    const { courseId, userId } = session.metadata;
-
-    if (!courseId || !userId) {
-      return res.status(400).json({ message: "Invalid session metadata" });
-    }
-
-    // Verify karo ki logged in user hi hai
-    if (userId !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Unauthorized" });
-    }
-
-    await enrollUserInCourse(userId, courseId, sessionId);
-
-    res.json({ success: true, message: "Enrolled successfully!" });
+    res.status(200).json({ success: true, message: "Enrolled successfully!" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
-
-async function enrollUserInCourse(userId, courseId, sessionId) {
-  const user = await User.findById(userId);
-  if (!user) return;
-
-  const alreadyEnrolled = user.purchasedCourses.some(
-    (pc) => pc.course.toString() === courseId
-  );
-
-  if (!alreadyEnrolled) {
-    user.purchasedCourses.push({
-      course: courseId,
-      stripeSessionId: sessionId,
-      progress: 0,
-      completedLessons: [],
-    });
-    await user.save();
-
-    // Enrolled count badhao
-    await Course.findByIdAndUpdate(courseId, { $inc: { enrolledCount: 1 } });
-  }
-}
 
 // Get My Purchased Courses
 export const getMyPurchasedCourses = async (req, res) => {
@@ -150,7 +74,7 @@ export const getMyPurchasedCourses = async (req, res) => {
 
     res.status(200).json({ success: true, data: courses });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -170,7 +94,6 @@ export const createCourse = async (req, res) => {
       courseData.totalLessons = courseData.modules.reduce((s, m) => s + (m.lessons?.length || 0), 0);
     }
 
-    // outcomes[] array format handle karo
     if (req.body["outcomes[]"]) {
       courseData.outcomes = Array.isArray(req.body["outcomes[]"]) ? req.body["outcomes[]"] : [req.body["outcomes[]"]];
     }
@@ -330,7 +253,6 @@ export const addLesson = async (req, res) => {
 
     mod.lessons.push({ title, videoUrl, videoType: videoType || "youtube", duration, isFree: isFree || false, order: mod.lessons.length });
 
-    // Total lessons update karo
     course.totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
     await course.save();
 

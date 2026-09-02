@@ -6,10 +6,8 @@ import {
   getCourseById,
   updateCourse,
   deleteCourse,
-  createCheckoutSession,
+  enrollCourse,
   getMyPurchasedCourses,
-  stripeWebhook,
-  verifyAndEnroll,
   addModule,
   updateModule,
   deleteModule,
@@ -23,9 +21,6 @@ import { protect } from "../../middleware/auth.middleware.js";
 const router = express.Router();
 const upload = multer();
 
-// Stripe webhook - raw body chahiye
-router.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-
 // Admin Stats
 router.get("/admin/stats", protect, getAdminStats);
 
@@ -38,9 +33,8 @@ router.patch("/update/:id", updateCourse);
 router.delete("/delete/:id", deleteCourse);
 router.get("/:id", getCourseById);
 
-// Stripe
-router.post("/create-checkout-session", protect, createCheckoutSession);
-router.post("/verify-enroll", protect, verifyAndEnroll);
+// Direct Enrollment Route (Stripe removed)
+router.post("/enroll", protect, enrollCourse);
 
 // Modules
 router.post("/:id/modules", addModule);
