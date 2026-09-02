@@ -33,9 +33,10 @@ router.get("/admin/stats", protect, getAdminStats);
 router.post("/create", upload.single("thumbnail"), createCourse);
 router.get("/all", getAllCourses);
 router.get("/my-courses", protect, getMyPurchasedCourses);
-router.get("/:id", getCourseById);
 router.put("/update/:id", upload.single("thumbnail"), updateCourse);
+router.patch("/update/:id", updateCourse);
 router.delete("/delete/:id", deleteCourse);
+router.get("/:id", getCourseById);
 
 // Stripe
 router.post("/create-checkout-session", protect, createCheckoutSession);

@@ -20,25 +20,23 @@ const app = express();
    CORS CONFIG
 ======================= */
 
-const allowedOrigins = [
-  "http://localhost:5173", 
-  "http://localhost:5174",
-  "https://thedigicampus.com",
-  "https://www.thedigicampus.com",
-  "https://admin.thedigicampus.com"
-];
 const corsOptions = {
   origin: function (origin, callback) {
-    // Agar development me ho ya localhost hai, toh bindass allow karo
-    if (!origin || origin === "null" || allowedOrigins.includes(origin) || origin.includes("localhost")) {
-      return callback(null, true);
-    }
-    return callback(new Error("CORS not allowed by Ashish's Server"));
+    if (!origin || origin === "null") return callback(null, true);
+    if (origin.includes("localhost") || origin.includes("127.0.0.1")) return callback(null, true);
+    if (origin.endsWith(".vercel.app")) return callback(null, true);
+    const allowed = [
+      "https://thedigicampus.com",
+      "https://www.thedigicampus.com",
+      "https://admin.thedigicampus.com",
+    ];
+    if (allowed.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS blocked: " + origin));
   },
   credentials: true,
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS", // Simple string format lines ke lafde khatam karne ke liye
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
-  optionsSuccessStatus: 200
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control", "Pragma"],
+  optionsSuccessStatus: 200,
 };
 
 /* =======================
@@ -46,9 +44,8 @@ const corsOptions = {
 ======================= */
 
 app.use(cors(corsOptions));
+ // handle preflight for all routes
 
-// Handle preflight requests
-// app.options("*", cors(corsOptions));
 
 /* =======================
    GLOBAL MIDDLEWARES
@@ -68,7 +65,7 @@ app.use(morgan("dev"));
 ======================= */
 
 app.get("/", (req, res) => {
-  res.send("Docker auto update ho raha hai Shah Alammmm saifiiiii samaj.");
+  res.send("Api is working Shah Alammmm ");
 });
 
 /* =======================
