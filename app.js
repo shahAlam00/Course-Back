@@ -9,7 +9,7 @@ import courseRoutes from "./modules/course/course.routes.js";
 import doubtRoutes from "./modules/doubt/doubt.routes.js";
 
 dotenv.config();
-connectDB().catch((err) => console.error("DB connection failed:", err.message));
+
 
    
 
