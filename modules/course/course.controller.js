@@ -163,6 +163,12 @@ export const createCourse = async (req, res) => {
     if (typeof courseData.outcomes === "string") courseData.outcomes = JSON.parse(courseData.outcomes);
     if (typeof courseData.requirements === "string") courseData.requirements = JSON.parse(courseData.requirements);
     if (typeof courseData.features === "string") courseData.features = JSON.parse(courseData.features);
+    if (typeof courseData.modules === "string") courseData.modules = JSON.parse(courseData.modules);
+
+    // Auto-calculate totalLessons from modules
+    if (Array.isArray(courseData.modules)) {
+      courseData.totalLessons = courseData.modules.reduce((s, m) => s + (m.lessons?.length || 0), 0);
+    }
 
     // outcomes[] array format handle karo
     if (req.body["outcomes[]"]) {
@@ -227,6 +233,12 @@ export const updateCourse = async (req, res) => {
 
     if (typeof updateData.outcomes === "string") updateData.outcomes = JSON.parse(updateData.outcomes);
     if (typeof updateData.requirements === "string") updateData.requirements = JSON.parse(updateData.requirements);
+    if (typeof updateData.modules === "string") updateData.modules = JSON.parse(updateData.modules);
+
+    // Auto-calculate totalLessons from modules
+    if (Array.isArray(updateData.modules)) {
+      updateData.totalLessons = updateData.modules.reduce((s, m) => s + (m.lessons?.length || 0), 0);
+    }
 
     if (req.body["outcomes[]"]) {
       updateData.outcomes = Array.isArray(req.body["outcomes[]"]) ? req.body["outcomes[]"] : [req.body["outcomes[]"]];
@@ -245,7 +257,7 @@ export const updateCourse = async (req, res) => {
       updateData.thumbnail = uploaded.url;
     }
 
-    const updatedCourse = await Course.findByIdAndUpdate(courseId, updateData, { new: true, runValidators: true });
+    const updatedCourse = await Course.findByIdAndUpdate(courseId, { $set: updateData }, { new: true, runValidators: true });
 
     if (!updatedCourse) return res.status(404).json({ success: false, message: "Course not found to update" });
 

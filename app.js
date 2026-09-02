@@ -21,7 +21,7 @@ const app = express();
 ======================= */
 
 const allowedOrigins = [
-  "http://localhost:5173",
+  "http://localhost:5173", 
   "http://localhost:5174",
   "https://thedigicampus.com",
   "https://www.thedigicampus.com",

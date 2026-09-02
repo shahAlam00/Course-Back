@@ -10,7 +10,7 @@ const lessonSchema = new mongoose.Schema({
 });
 
 const moduleSchema = new mongoose.Schema({
-  title: { type: String, required: true, trim: true },
+  title: { type: String, required: true, trim: true }, 
   order: { type: Number, default: 0 },
   lessons: [lessonSchema],
 });
