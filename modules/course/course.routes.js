@@ -1,49 +1,125 @@
 import express from "express";
 import multer from "multer";
+
 import {
   createCourse,
   getAllCourses,
   getCourseById,
   updateCourse,
   deleteCourse,
-  enrollCourse,
+
   getMyPurchasedCourses,
+
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+
   addModule,
   updateModule,
   deleteModule,
+
   addLesson,
   updateLesson,
   deleteLesson,
+
   getAdminStats,
 } from "./course.controller.js";
+
 import { protect } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
+
 const upload = multer();
 
-// Admin Stats
+// ===================== ADMIN STATS =====================
+
 router.get("/admin/stats", protect, getAdminStats);
 
-// Course CRUD
-router.post("/create", upload.single("thumbnail"), createCourse);
+// ===================== COURSE CRUD =====================
+
+router.post(
+  "/create",
+  upload.single("thumbnail"),
+  createCourse
+);
+
 router.get("/all", getAllCourses);
-router.get("/my-courses", protect, getMyPurchasedCourses);
-router.put("/update/:id", upload.single("thumbnail"), updateCourse);
-router.patch("/update/:id", updateCourse);
-router.delete("/delete/:id", deleteCourse);
+
+router.get(
+  "/my-courses",
+  protect,
+  getMyPurchasedCourses
+);
+
+router.put(
+  "/update/:id",
+  upload.single("thumbnail"),
+  updateCourse
+);
+
+// PATCH support
+router.patch(
+  "/update/:id",
+  upload.single("thumbnail"),
+  updateCourse
+);
+
+router.delete(
+  "/delete/:id",
+  deleteCourse
+);
+
+// ===================== RAZORPAY PAYMENT =====================
+
+// Create Razorpay Order
+router.post(
+  "/payment/create-order",
+  protect,
+  createRazorpayOrder
+);
+
+// Verify Razorpay Payment
+router.post(
+  "/payment/verify",
+  protect,
+  verifyRazorpayPayment
+);
+
+// ===================== COURSE DETAILS =====================
+
 router.get("/:id", getCourseById);
 
-// Direct Enrollment Route (Stripe removed)
-router.post("/enroll", protect, enrollCourse);
+// ===================== MODULES =====================
 
-// Modules
-router.post("/:id/modules", addModule);
-router.put("/:id/modules/:moduleId", updateModule);
-router.delete("/:id/modules/:moduleId", deleteModule);
+router.post(
+  "/:id/modules",
+  addModule
+);
 
-// Lessons
-router.post("/:id/modules/:moduleId/lessons", addLesson);
-router.put("/:id/modules/:moduleId/lessons/:lessonId", updateLesson);
-router.delete("/:id/modules/:moduleId/lessons/:lessonId", deleteLesson);
+router.put(
+  "/:id/modules/:moduleId",
+  updateModule
+);
+
+router.delete(
+  "/:id/modules/:moduleId",
+  deleteModule
+);
+
+// ===================== LESSONS =====================
+
+router.post(
+  "/:id/modules/:moduleId/lessons",
+  addLesson
+);
+
+router.put(
+  "/:id/modules/:moduleId/lessons/:lessonId",
+  updateLesson
+);
+
+router.delete(
+  "/:id/modules/:moduleId/lessons/:lessonId",
+  deleteLesson
+);
 
 export default router;

@@ -7,7 +7,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import courseRoutes from "./modules/course/course.routes.js";
 import doubtRoutes from "./modules/doubt/doubt.routes.js";
-
+import certificateRoutes from "./modules/certificate/certificate.routes.js";
 dotenv.config();
 
 
@@ -73,8 +73,12 @@ app.get("/", (req, res) => {
 ======================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
-app.use("/api/doubts", doubtRoutes);
-/* =======================
+app.use("/api/doubts", doubtRoutes); 
+app.use(
+  "/api/certificates",
+  certificateRoutes
+);
+/* ======================= 
    404 ROUTE HANDLER
 ======================= */
 
